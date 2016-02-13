@@ -1,0 +1,25 @@
+About the game:
+
+There are doctors and patients. We need an abstract class called person. 
+This person has attributes like size and name and color and status. 
+The person has a pure virtual function called greet.
+The person has a pure virtual function called good bye.
+
+Doctor size name and color can be anything. Status is occupied / free. 
+
+Patient size name and color can be anything. Status is sick / healed / dead. Patient also has a type of disease.
+
+There is a class called disease. Diseases have a cost to heal and a time til death and a disease. Time til death should be modified when the patient is being seen by the doctor.
+
+Patients and doctors are stored in a priority queue.
+
+Drs. are popped off based on maximum length of time not working.
+Patients are popped off based on time til death.
+
+The program has concurrent threads. Doctors are healing patients concurrently, taking patients off the priority queue concurrently.
+
+At the end, program results are written to a database.
+Columns are
+NAME DISEASE STATUS
+
+Animation in SDL shows two rows. Top row of faces are doctors. Bottom row of faces are patients. When the Dr is seeing a patient, a line is drawn. If a patient dies with the dr. 
