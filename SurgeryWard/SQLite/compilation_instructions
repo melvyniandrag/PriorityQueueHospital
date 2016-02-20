@@ -1,0 +1,2 @@
+g++ MakeTable.cpp  -lsqlite3 -lpthread -ldl
+
