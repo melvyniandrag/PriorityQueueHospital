@@ -9,12 +9,14 @@ using String = std::string;
 
 class patient : public person{
 public:
-    patient(int age,
-	    int mood,
+    patient(int id,
+            int age,
+	        int mood,
             int insurance,
             int wealth,
             int bp, 
-	    String illness) :
+	        String illness) :
+            id(id),
             age(age), 
             mood(mood),
             insurance(insurance),
@@ -27,7 +29,8 @@ public:
     void WriteData() { std::cout << "This is a placeholder." << std::endl;} 
     void Die() {this->alive = 0;}
     int IsAlive() {return alive;}
-private:
+    friend std::ostream& operator<< (std::ostream& os, const patient& pat);
+    int id;
     String illness;
     int alive;
     int time_to_die;

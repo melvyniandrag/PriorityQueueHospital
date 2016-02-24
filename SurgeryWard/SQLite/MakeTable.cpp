@@ -68,7 +68,37 @@ int main(int argc, char* argv[])
    }else{
       fprintf(stdout, "Records created successfully\n");
    }
- 	
-   sqlite3_close(db);
+ 
+   /* Create SQL statement */
+   sql_create = "CREATE TABLE DISEASES("  \
+         "ILLNESS CHAR(20) PRIMARY KEY     NOT NULL," \
+	 "TIME_TO_DIE        INT    NOT NULL);";
+
+
+   /* Execute SQL statement */
+   rc = sqlite3_exec(db, sql_create, callback, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }else{
+      fprintf(stdout, "Table created successfully\n");
+   }
+   sql_insert = "INSERT INTO DISEASES(ILLNESS, TIME_TO_DIE) " \
+                "VALUES('CIRRHOSIS', 20); "\
+	        "INSERT INTO DISEASES(ILLNESS, TIME_TO_DIE) " \
+                "VALUES('HEART DISEASE',10); "\
+  		"INSERT INTO DISEASES(ILLNESS, TIME_TO_DIE) " \
+                "VALUES('WARTS', 30); ";
+
+   /* Execute SQL statement */
+   rc = sqlite3_exec(db, sql_insert, callback, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }else{
+      fprintf(stdout, "Table created successfully\n");
+   }
+   sqlite3_close(db); 
    return 0;
+  
 }

@@ -1,15 +1,17 @@
 The purpose of this code is to showcase my knowledge of various aspects of the C++ language.
 The language features I use are:
-Classes
-Inherited Classes
-Abstract Classes
-Smart Pointers
-Interacting with a SQLite DB
-Priority Queue
-Map
-Vector
-Function Pointer
-SDL
-Valgrind For Memory Validating
-Error Handling
-Dynamically Allocating Memory
+(X) operator overloading
+(X) Classes
+(X) Inherited Classes
+( ) Abstract Classes
+( ) Smart Pointers
+(X) Interacting with a SQLite DB
+(X) Priority Queue
+(X) Templates
+( ) Map
+(X) Vector
+( ) Function Pointer
+( ) SDL
+( ) Valgrind For Memory Validating
+( ) Error Handling
+( ) Dynamically Allocating Memory
