@@ -98,7 +98,48 @@ int main(int argc, char* argv[])
    }else{
       fprintf(stdout, "Table created successfully\n");
    }
-   sqlite3_close(db); 
+   
+    /* Create SQL statement */
+   sql_create = "CREATE TABLE NURSES("  \
+        " ID PRIMARY KEY     NOT NULL," \
+	 "NURSE_TYPE        INT    NOT NULL);";
+
+
+   /* Execute SQL statement */
+   rc = sqlite3_exec(db, sql_create, callback, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }else{
+      fprintf(stdout, "Table created successfully\n");
+   }
+   sql_insert = "INSERT INTO NURSES(ID, NURSE_TYPE) " \
+                "VALUES(1, 1); "\
+                "INSERT INTO NURSES(ID, NURSE_TYPE) " \
+                "VALUES(2, 2); "\
+                "INSERT INTO NURSES(ID, NURSE_TYPE) " \
+                "VALUES(3, 3); "\
+                "INSERT INTO NURSES(ID, NURSE_TYPE) " \
+                "VALUES(4, 4); "\
+                "INSERT INTO NURSES(ID, NURSE_TYPE) " \
+                "VALUES(5, 5); "\
+                "INSERT INTO NURSES(ID, NURSE_TYPE) " \
+                "VALUES(6, 6); "\
+                "INSERT INTO NURSES(ID, NURSE_TYPE) " \
+                "VALUES(7, 6); " \
+                "INSERT INTO NURSES(ID, NURSE_TYPE) " \
+                "VALUES(8, 7); " ;
+
+    /* Execute SQL statement */
+   rc = sqlite3_exec(db, sql_insert, callback, 0, &zErrMsg);
+   if( rc != SQLITE_OK ){
+   fprintf(stderr, "SQL error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+   }else{
+      fprintf(stdout, "Table created successfully\n");
+   }
+    
+    sqlite3_close(db); 
    return 0;
   
 }

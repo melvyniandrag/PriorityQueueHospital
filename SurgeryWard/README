@@ -3,15 +3,33 @@ The language features I use are:
 (X) operator overloading
 (X) Classes
 (X) Inherited Classes
-( ) Abstract Classes
+(X) Abstract Classes
 ( ) Smart Pointers
 (X) Interacting with a SQLite DB
 (X) Priority Queue
 (X) Templates
-( ) Map
+(X) Map
 (X) Vector
 ( ) Function Pointer
 ( ) SDL
 ( ) Valgrind For Memory Validating
 ( ) Error Handling
 ( ) Dynamically Allocating Memory
+
+
+# TODO:
+- If possible, put all sdl functions in another file. I don't yet understand why the window and renderer are declared outside of the functions which use them.
+- write whether or not a patient lived into the db. 
+
+Done:
+operator overloading : overloading the << operator for nurses, patients.
+classes : several classes
+inherited classes : person -> nurse -> nurseXX
+                    person -> patient
+                    person -> doctor
+abstract class : person
+sqldb : use sqlite to get patient, nurse info.
+priority queue : each nurse stores a priority queue of patients and pops one off, deciding where the nurse should go.
+templates : the print_vector function is templated to print out the contents of arbitray vectors. Of course, the range based loop with auto would also work.
+map: map storing the disease information
+vector: all patients and nurses are stored in vectors.
