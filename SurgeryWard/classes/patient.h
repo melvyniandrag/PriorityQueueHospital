@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <map>
 #include <cmath>
 #include "person.h"
 
@@ -24,8 +25,8 @@ public:
             bp(bp),
             illness(illness), 
             alive(1) 
-            { SetTimeTilDeath(illness); };
-    void SetTimeTilDeath(String illness) {this->time_to_die = 5;};
+            {};
+    void SetTimeTilDeath(std::map<std::string, int> dm);
     void WriteData() { std::cout << "This is a placeholder." << std::endl;} 
     void Die() {this->alive = 0;}
     int IsAlive() {return alive;}

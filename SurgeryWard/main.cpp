@@ -6,9 +6,9 @@
 #include "classes/doctor.h"
 #include "classes/patient.h"
 #include "classes/nurse.h"
+#include "graphics/sdl.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL/SDL.h>
 #include <stdio.h>
 #include <cmath>
 
@@ -16,130 +16,6 @@
 
 using namespace std;
 
-//Screen dimension constants
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
-
-//Starts up SDL and creates window
-bool init();
-
-//Loads media
-bool loadMedia();
-
-//Frees media and shuts down SDL
-void close();
-
-//Loads individual image as texture
-SDL_Texture* loadTexture( std::string path );
-
-//The window we'll be rendering to
-SDL_Window* gWindow = NULL;
-
-//The window renderer
-SDL_Renderer* gRenderer = NULL;
-
-bool init()
-{
-	//Initialization flag
-	bool success = true;
-
-	//Initialize SDL
-	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
-	{
-		printf( "SDL could not initialize! SDL Error: %s\n", SDL_GetError() );
-		success = false;
-	}
-	else
-	{
-		//Set texture filtering to linear
-		if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "1" ) )
-		{
-			printf( "Warning: Linear texture filtering not enabled!" );
-		}
-
-		//Create window
-		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
-		if( gWindow == NULL )
-		{
-			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
-			success = false;
-		}
-		else
-		{
-			//Create renderer for window
-			gRenderer = SDL_CreateRenderer( gWindow, -1, SDL_RENDERER_ACCELERATED );
-			if( gRenderer == NULL )
-			{
-				printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
-				success = false;
-			}
-			else
-			{
-				//Initialize renderer color
-				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
-
-				//Initialize PNG loading
-				int imgFlags = IMG_INIT_PNG;
-				if( !( IMG_Init( imgFlags ) & imgFlags ) )
-				{
-					printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError() );
-					success = false;
-				}
-			}
-		}
-	}
-
-	return success;
-}
-
-bool loadMedia()
-{
-	//Loading success flag
-	bool success = true;
-
-	//Nothing to load
-	return success;
-}
-
-void close()
-{
-	//Destroy window	
-	SDL_DestroyRenderer( gRenderer );
-	SDL_DestroyWindow( gWindow );
-	gWindow = NULL;
-	gRenderer = NULL;
-
-	//Quit SDL subsystems
-	IMG_Quit();
-	SDL_Quit();
-}
-
-SDL_Texture* loadTexture( std::string path )
-{
-	//The final texture
-	SDL_Texture* newTexture = NULL;
-
-	//Load image at specified path
-	SDL_Surface* loadedSurface = IMG_Load( path.c_str() );
-	if( loadedSurface == NULL )
-	{
-		printf( "Unable to load image %s! SDL_image Error: %s\n", path.c_str(), IMG_GetError() );
-	}
-	else
-	{
-		//Create texture from surface pixels
-        newTexture = SDL_CreateTextureFromSurface( gRenderer, loadedSurface );
-		if( newTexture == NULL )
-		{
-			printf( "Unable to create texture from %s! SDL Error: %s\n", path.c_str(), SDL_GetError() );
-		}
-
-		//Get rid of old loaded surface
-		SDL_FreeSurface( loadedSurface );
-	}
-
-	return newTexture;
-}
 sqlite3* db;
 
 using Record = std::vector<std::string>;
@@ -246,21 +122,7 @@ int main(int argc, char ** argv){
             int id = atoi(nurse_record[0].c_str());
             int which_nurse = atoi(nurse_record[1].c_str());
             cout << "LOADING NURSE " <<  id << " of type " << which_nurse << endl;
-           // if (which_nurse==1)
-           //     nv.push_back(new nurse<IncrAgeSort>(id, ias));
-           // else if (which_nurse == 2)
-           //     nv.push_back(new nurse<DecrAgeSort>(id, das));
-           // else if (which_nurse ==3)
-           //     nv.push_back(new nurse<IncrBloodPressureSort>(id, ibps));
-           // else if (which_nurse == 4)
-           //     nv.push_back(new nurse<DecrBloodPressureSort>(id, dbps));
-           // else if (which_nurse == 5)
-           //     nv.push_back(new nurse<WealthSort>(id, ws));
-           // else if (which_nurse == 6)
-           //     nv.push_back(new nurse<InsuranceSort>(id, is));
-           // else
-           //     nv.push_back(new nurse<MoodSort>(id, ms));
-switch (which_nurse){
+            switch (which_nurse){
                 case 1:
                     nv.push_back(new nurse<IncrAgeSort>(id, ias));break;
                 case 2:
@@ -299,6 +161,11 @@ switch (which_nurse){
         cout << "Error No. " << DB_ERROR << "! Unable to read in disease information." << endl;
     }
 
+    // Now set each patient's time to die based on the values in the disease map.
+    for (auto& p : pv){
+        p.SetTimeTilDeath(dm);
+    }
+    
     //close database
     sqlite3_close(db);
     std::cout << " Just closed the db connection!!!!" << std::endl; 
@@ -318,5 +185,80 @@ switch (which_nurse){
         n_pats -= 1;
     }
 
+static const int width = 640;
+    static const int height = 480;
+    static const int max_radius = 64;
+ 
+    if (SDL_Init(SDL_INIT_VIDEO) != 0)
+      return 1;
+ 
+    atexit(SDL_Quit);
+ 
+    SDL_Surface *screen = SDL_SetVideoMode(width, height, 0, SDL_DOUBLEBUF);
+ 
+    if (screen == NULL)
+        return 2;
+ 
+    while(true)
+    {
+        SDL_Event event; 
+        while(SDL_PollEvent(&event))
+        {
+            if(event.type == SDL_QUIT)
+                return 0;
+        }
+
+ 
+        int x = 60;
+        int y = 14;
+        int r = 30;
+
+
+        if (r >= 4)
+        {
+            if (x < r + 2)
+                x = r + 2;
+            else if (x > width - r - 2)
+                x = width - r - 2;
+ 
+            if (y < r + 2)
+                y = r + 2;
+            else if (y > height - r - 2)
+                y = height - r - 2;
+        }
+ 
+        SDL_LockSurface(screen);
+ 
+        fill_circle(screen, x, y, r, 0xcc0000);
+        draw_circle(screen, x, y, r, 0xffffff);
+
+        int x2 = 1;
+        int y2 = 4;
+        int r2 = 10;
+
+        if (r2 >= 4)
+        {
+            if (x2 < r2 + 2)
+                x2 = r2 + 2;
+            else if (x2 > width - r2 - 2)
+                x2 = width - r2 - 2;
+ 
+            if (y2 < r2 + 2)
+                y2 = r2 + 2;
+            else if (y2 > height - r2 - 2)
+                y2 = height - r2 - 2;
+        }
+ 
+        SDL_LockSurface(screen);
+ 
+        fill_circle(screen, x2, y2, r2, 0xcc0000);
+        draw_circle(screen, x2, y2, r2, 0xffffff);
+ 
+        SDL_FreeSurface(screen);
+ 
+        SDL_Flip(screen);
+    }
+ 
+    return 0;
     return 0;
 }
