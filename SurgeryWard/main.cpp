@@ -9,6 +9,7 @@
 #include "graphics/sdl.h"
 
 #include <SDL/SDL.h>
+#include <SDL/SDL_ttf.h>
 #include <stdio.h>
 #include <cmath>
 
@@ -58,7 +59,6 @@ void sql_stmt(const char* stmt)
   }
 }
 
-
 using PatVec = vector<patient>;
 using DiseaseMap = map<string, int>;
 
@@ -82,6 +82,75 @@ patient MakePatient(Record record){
 const int DB_ERROR = 1;
 const int SDL_ERROR = 2;
 
+void make_patient(int xpatient, int ypatient, int rpatient, const int height, const int width, SDL_Surface *screen){
+        int x = xpatient;
+        int y = ypatient;
+        int r = rpatient;
+        if (r >= 4)
+        {
+            if (x < r + 2)
+                x = r + 2;
+            else if (x > width - r - 2)
+                x = width - r - 2;
+ 
+            if (y < r + 2)
+                y = r + 2;
+            else if (y > height - r - 2)
+                y = height - r - 2;
+        }
+        //SDL_LockSurface(screen);
+        fill_circle(screen, x, y, r, 0xcc0000);
+        draw_circle(screen, x, y, r, 0xffffff);
+
+        /*********************** Nurse circles*******************************/
+        float rnurse = 0.15*rpatient; 
+        int xnurse = xpatient - 1.5*(rnurse + rpatient); 
+        float y2 = (ypatient - rpatient) + rpatient * 0.25;
+        float y3 = (ypatient - rpatient) + rpatient * 0.75;
+        float y4 = (ypatient - rpatient) + rpatient * 1.25;
+        float y5 = (ypatient - rpatient) + rpatient * 1.75;
+ 
+        if (rnurse >= 4)
+        {
+            if (xnurse < rnurse + 2)
+                xnurse = rnurse + 2;
+            else if (xnurse > width - rnurse - 2)
+                xnurse = width - rnurse - 2;
+ 
+            if (y2 < rnurse + 2)
+                y2 = rnurse + 2;
+            else if (y2 > height - rnurse - 2)
+                y2 = height - rnurse - 2;
+            
+            if (y3 < rnurse + 2)
+                y3 = rnurse + 2;
+            else if (y3 > height - rnurse - 2)
+                y3 = height - rnurse - 2;
+
+            if (y4 < rnurse + 2)
+                y4 = rnurse + 2;
+            else if (y4 > height - rnurse - 2)
+                y4 = height - rnurse - 2;
+            
+            if (y5 < rnurse + 2)
+                y5 = rnurse + 2;
+            else if (y5 > height - rnurse - 2)
+                y5 = height - rnurse - 2;
+
+        }
+        fill_circle(screen, xnurse, y2, rnurse, 0xcc0000);
+        draw_circle(screen, xnurse, y2, rnurse, 0xffffff);
+        
+        fill_circle(screen, xnurse, y3, rnurse, 0xcc0000);
+        draw_circle(screen, xnurse, y3, rnurse, 0xffffff);
+        
+        fill_circle(screen, xnurse, y4, rnurse, 0xcc0000);
+        draw_circle(screen, xnurse, y4, rnurse, 0xffffff);
+        
+        fill_circle(screen, xnurse, y5, rnurse, 0xcc0000);
+        draw_circle(screen, xnurse, y5, rnurse, 0xffffff);
+}
+
 int main(int argc, char ** argv){
     //Open database.
     if (sqlite3_open("SQLite/surgery_ward.db", &db) != SQLITE_OK) {
@@ -93,9 +162,9 @@ int main(int argc, char ** argv){
 
     // Read patient information into the patient vector.
     try{
-        Records patient_records = select_stmt("SELECT * FROM PATIENTS");
-        for (auto& patient_record : patient_records) {
-	        pv.push_back(MakePatient(patient_record));         
+        Records rpatientecords = select_stmt("SELECT * FROM PATIENTS");
+        for (auto& rpatientecord : rpatientecords) {
+	        pv.push_back(MakePatient(rpatientecord));         
         }    
             }
     catch(...){
@@ -144,9 +213,7 @@ int main(int argc, char ** argv){
         cout << "Error No. " << DB_ERROR << "! Unable to read in nurse information." << endl;
     }
     std::cout << "There are " << nv.size() << "nurses in the nurse vector" << std::endl;
-    int dumy;
-    cin >> dumy;
-    // Read from db of disease information.
+    
     try{
         Records disease_records = select_stmt("SELECT * FROM DISEASES");
         for (auto& disease_record : disease_records){
@@ -165,7 +232,7 @@ int main(int argc, char ** argv){
     for (auto& p : pv){
         p.SetTimeTilDeath(dm);
     }
-    
+
     //close database
     sqlite3_close(db);
     std::cout << " Just closed the db connection!!!!" << std::endl; 
@@ -180,13 +247,13 @@ int main(int argc, char ** argv){
         for(auto& n : nv){
             cout << n->GetPatient().id << endl;
         }
-        int dum;
-        cin >> dum;
+        //int dum;
+        //cin >> dum;
         n_pats -= 1;
     }
 
-static const int width = 640;
-    static const int height = 480;
+    static const int width = 1200;
+    static const int height = 600;
     static const int max_radius = 64;
  
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -199,6 +266,30 @@ static const int width = 640;
     if (screen == NULL)
         return 2;
  
+   SDL_WM_SetCaption("SDL Tutorial", "SDL Tutorial");
+
+   // Initialize SDL_ttf library
+   if (TTF_Init() != 0)
+   {
+      cerr << "TTF_Init() Failed: " << TTF_GetError() << endl;
+      SDL_Quit();
+      exit(1);
+   }
+
+   // Load a font
+   TTF_Font *font;
+   font = TTF_OpenFont("lazy.ttf", 24);
+   if (font == NULL)
+   {
+      cerr << "TTF_OpenFont() Failed: " << TTF_GetError() << endl;
+      TTF_Quit();
+      SDL_Quit();
+      exit(1);
+   }
+
+    SDL_Surface *text;
+    SDL_Color text_color = {255, 255, 255};
+    text = TTF_RenderText_Solid(font,"               Surgery Room Simulator",text_color);
     while(true)
     {
         SDL_Event event; 
@@ -207,58 +298,29 @@ static const int width = 640;
             if(event.type == SDL_QUIT)
                 return 0;
         }
+        make_patient(200, 200, 80, height, width, screen);
+        make_patient(500, 200, 80, height, width, screen);
+        make_patient(800, 200, 80, height, width, screen);
+        make_patient(1100, 200, 80, height, width, screen);
+        make_patient(200, 500, 80, height, width, screen);
+        make_patient(500, 500, 80, height, width, screen);
+        make_patient(800, 500, 80, height, width, screen);
+        make_patient(1100, 500, 80, height, width, screen);
 
- 
-        int x = 60;
-        int y = 14;
-        int r = 30;
 
 
-        if (r >= 4)
+// Set the title bar
+        // Apply the text to the display
+        if (SDL_BlitSurface(text, NULL, screen, NULL) != 0)
         {
-            if (x < r + 2)
-                x = r + 2;
-            else if (x > width - r - 2)
-                x = width - r - 2;
- 
-            if (y < r + 2)
-                y = r + 2;
-            else if (y > height - r - 2)
-                y = height - r - 2;
+             cerr << "SDL_BlitSurface() Failed: " << SDL_GetError() << endl;
+            break;
         }
- 
-        SDL_LockSurface(screen);
- 
-        fill_circle(screen, x, y, r, 0xcc0000);
-        draw_circle(screen, x, y, r, 0xffffff);
 
-        int x2 = 1;
-        int y2 = 4;
-        int r2 = 10;
-
-        if (r2 >= 4)
-        {
-            if (x2 < r2 + 2)
-                x2 = r2 + 2;
-            else if (x2 > width - r2 - 2)
-                x2 = width - r2 - 2;
- 
-            if (y2 < r2 + 2)
-                y2 = r2 + 2;
-            else if (y2 > height - r2 - 2)
-                y2 = height - r2 - 2;
-        }
- 
-        SDL_LockSurface(screen);
- 
-        fill_circle(screen, x2, y2, r2, 0xcc0000);
-        draw_circle(screen, x2, y2, r2, 0xffffff);
- 
+        //SDL_LockSurface(screen);
         SDL_FreeSurface(screen);
  
         SDL_Flip(screen);
     }
- 
-    return 0;
     return 0;
 }

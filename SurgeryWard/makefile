@@ -1,6 +1,6 @@
 COMP = g++ -std=c++11
 SQLLIBS = -lsqlite3 -lpthread -ldl
-SDLLIBS = -lSDL
+SDLLIBS = -lSDL -lSDL_ttf
 
 all: SurgeryWard 
 
