@@ -7,6 +7,7 @@
 #include "classes/patient.h"
 #include "classes/nurse.h"
 #include "graphics/sdl.h"
+#include<cassert>
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
@@ -82,7 +83,25 @@ patient MakePatient(Record record){
 const int DB_ERROR = 1;
 const int SDL_ERROR = 2;
 
-void make_patient(int xpatient, int ypatient, int rpatient, const int height, const int width, SDL_Surface *screen){
+static const int width = 1200;
+static const int height = 600;
+static const int max_radius = 64;
+
+//Color codes were taken from://en.wikipedia.org/wiki/Web_colors  
+string DEAD_STRING = "0xff0000";
+string ALIVE_STRING = "0x00ff00";
+string CURRENT_STRING = "0xffffff";
+
+string PRESENT_NURSE_STRING = "0xdda0dd";
+string ABSENT_NURSE_STRING = "0x008080";
+
+const int DEAD = 0;
+const int ALIVE = 1;
+const int CURR = 2;
+
+SDL_Colors colors(ALIVE_STRING, DEAD_STRING, CURRENT_STRING, PRESENT_NURSE_STRING, ABSENT_NURSE_STRING);
+
+void make_patient(int xpatient, int ypatient, int rpatient, const int height, const int width, SDL_Surface *screen, int pat_status, int num_nurses){
         int x = xpatient;
         int y = ypatient;
         int r = rpatient;
@@ -98,10 +117,21 @@ void make_patient(int xpatient, int ypatient, int rpatient, const int height, co
             else if (y > height - r - 2)
                 y = height - r - 2;
         }
-        //SDL_LockSurface(screen);
-        fill_circle(screen, x, y, r, 0xcc0000);
-        draw_circle(screen, x, y, r, 0xffffff);
-
+        SDL_LockSurface(screen);
+        if (pat_status == DEAD){
+            fill_circle(screen, x, y, r, colors.p_dead_int);
+            draw_circle(screen, x, y, r, colors.p_dead_int);
+        }else if(pat_status == ALIVE){
+            fill_circle(screen, x, y, r, colors.p_alive_int);
+            draw_circle(screen, x, y, r, colors.p_alive_int);
+        }
+        else if(pat_status == CURR){
+            fill_circle(screen, x, y, r, colors.p_curr_int);
+            draw_circle(screen, x, y, r, colors.p_curr_int);
+        }
+        else{
+            cout << "ERROR IN MAKE PATIENT. INVALID pat_status." << endl;
+        }
         /*********************** Nurse circles*******************************/
         float rnurse = 0.15*rpatient; 
         int xnurse = xpatient - 1.5*(rnurse + rpatient); 
@@ -109,49 +139,32 @@ void make_patient(int xpatient, int ypatient, int rpatient, const int height, co
         float y3 = (ypatient - rpatient) + rpatient * 0.75;
         float y4 = (ypatient - rpatient) + rpatient * 1.25;
         float y5 = (ypatient - rpatient) + rpatient * 1.75;
- 
-        if (rnurse >= 4)
-        {
-            if (xnurse < rnurse + 2)
-                xnurse = rnurse + 2;
-            else if (xnurse > width - rnurse - 2)
-                xnurse = width - rnurse - 2;
- 
-            if (y2 < rnurse + 2)
-                y2 = rnurse + 2;
-            else if (y2 > height - rnurse - 2)
-                y2 = height - rnurse - 2;
-            
-            if (y3 < rnurse + 2)
-                y3 = rnurse + 2;
-            else if (y3 > height - rnurse - 2)
-                y3 = height - rnurse - 2;
-
-            if (y4 < rnurse + 2)
-                y4 = rnurse + 2;
-            else if (y4 > height - rnurse - 2)
-                y4 = height - rnurse - 2;
-            
-            if (y5 < rnurse + 2)
-                y5 = rnurse + 2;
-            else if (y5 > height - rnurse - 2)
-                y5 = height - rnurse - 2;
-
+  
+       vector<float> nurseY{y2, y3, y4, y5};
+        const int max_nurses = 4;
+        if (num_nurses > 4){
+            num_nurses = 4;
         }
-        fill_circle(screen, xnurse, y2, rnurse, 0xcc0000);
-        draw_circle(screen, xnurse, y2, rnurse, 0xffffff);
-        
-        fill_circle(screen, xnurse, y3, rnurse, 0xcc0000);
-        draw_circle(screen, xnurse, y3, rnurse, 0xffffff);
-        
-        fill_circle(screen, xnurse, y4, rnurse, 0xcc0000);
-        draw_circle(screen, xnurse, y4, rnurse, 0xffffff);
-        
-        fill_circle(screen, xnurse, y5, rnurse, 0xcc0000);
-        draw_circle(screen, xnurse, y5, rnurse, 0xffffff);
+        for(int i = 0; i < num_nurses; i++){
+            fill_circle(screen, xnurse, nurseY.at(i), rnurse, colors.n_pres_int);
+            draw_circle(screen, xnurse, nurseY.at(i), rnurse, colors.n_pres_int);
+        }
+        for(int i = num_nurses; i < max_nurses; i++){
+            fill_circle(screen, xnurse, nurseY.at(i), rnurse, colors.n_abs_int);
+            draw_circle(screen, xnurse, nurseY.at(i), rnurse, colors.n_abs_int);
+        }
+        SDL_UnlockSurface(screen);
+
 }
 
 int main(int argc, char ** argv){
+    
+    cout << colors.p_curr_int <<endl;
+    cout << colors.p_alive_int << endl;
+    cout << colors.p_dead_int << endl;
+    cout << colors.n_pres_int << endl;
+    cout << colors.n_abs_int << endl;
+
     //Open database.
     if (sqlite3_open("SQLite/surgery_ward.db", &db) != SQLITE_OK) {
         std::cerr << "Could not open database.\n";
@@ -170,10 +183,9 @@ int main(int argc, char ** argv){
     catch(...){
         cout << "ERROR No. " << DB_ERROR << "! Unable to read in patient information." << endl;
     }
-// Verify that the patients have been loaded correctly.
-    std::cout << "printing the contents of pv" << std::endl;
-    //print_vector(pv);
-        vector<basenurse*> nv;
+    
+    cout << "Loaded " << pv.size() << "patients." << endl;
+    vector<basenurse*> nv;
 
     //Read from database of nurse information.
     try{
@@ -236,34 +248,20 @@ int main(int argc, char ** argv){
     //close database
     sqlite3_close(db);
     std::cout << " Just closed the db connection!!!!" << std::endl; 
-    int n_pats = pv.size();
+   
+    // Load all patients into nurses. 
     for(auto n : nv){
             n->ResetQueue(pv);
     }
-    while(n_pats != 0){
-        std::cout << n_pats << " elements remaining in pv" << std::endl;
-        // Add the pv elements to the nurses.
-        
-        for(auto& n : nv){
-            cout << n->GetPatient().id << endl;
-        }
-        //int dum;
-        //cin >> dum;
-        n_pats -= 1;
-    }
 
-    static const int width = 1200;
-    static const int height = 600;
-    static const int max_radius = 64;
- 
-    if (SDL_Init(SDL_INIT_VIDEO) != 0)
-      return 1;
+       if (SDL_Init(SDL_INIT_VIDEO) != 0)
+       return 1;
  
     atexit(SDL_Quit);
  
     SDL_Surface *screen = SDL_SetVideoMode(width, height, 0, SDL_DOUBLEBUF);
  
-    if (screen == NULL)
+   if (screen == NULL)
         return 2;
  
    SDL_WM_SetCaption("SDL Tutorial", "SDL Tutorial");
@@ -290,37 +288,130 @@ int main(int argc, char ** argv){
     SDL_Surface *text;
     SDL_Color text_color = {255, 255, 255};
     text = TTF_RenderText_Solid(font,"               Surgery Room Simulator",text_color);
-    while(true)
+   
+    // Begin main loop.
+    int n_pats = pv.size();
+    int curr_pat_idx = 0;
+    /*
+    Logic for the SDL loop:
+    We have a vector of patients {p1, ... p8}
+    p1 is current. Once done it should be gone.
+
+    Loop while there are still patients to consider.
+        set time counter to zero
+        set the current patient to th current number. All patients numbers below this will be colored alive / dead, and the nurses won't be able to vist them.
+        
+        Inside, we must loop over the time steps until the patient dies.
+            During every iteration, 
+            
+            incrementthe time counter by one.
+
+    */
+    vector<int> patientX{200, 500, 800, 1100, 200, 500, 800, 1100};
+    vector<int> patientY{200, 200, 200, 200, 500, 500, 500, 500};
+    const int patientR = 80;    
+    vector<int> patientStat{ALIVE, ALIVE, ALIVE, ALIVE, ALIVE, ALIVE, ALIVE, ALIVE};
+    vector<int> nnurses {0,0,0,0,0,0,0,0};
+    int num_of_nurses = nv.size();
+    
+    vector<patient> remaining_patients = pv;
+    while(remaining_patients.size() != 0)
     {
+        fill(nnurses.begin(), nnurses.end(),0);
+        cout << "Current Patient Index " << curr_pat_idx << endl; 
+        cout << "nnurses:" << endl;
+        for (auto n : nnurses){
+            cout << n << " ";
+        }
+        cout << endl;
         SDL_Event event; 
         while(SDL_PollEvent(&event))
         {
             if(event.type == SDL_QUIT)
                 return 0;
         }
-        make_patient(200, 200, 80, height, width, screen);
-        make_patient(500, 200, 80, height, width, screen);
-        make_patient(800, 200, 80, height, width, screen);
-        make_patient(1100, 200, 80, height, width, screen);
-        make_patient(200, 500, 80, height, width, screen);
-        make_patient(500, 500, 80, height, width, screen);
-        make_patient(800, 500, 80, height, width, screen);
-        make_patient(1100, 500, 80, height, width, screen);
+        
+        // Load the nurses with remaining patients.
+        for(auto& n : nv){
+            n->ResetQueue(remaining_patients);
+        }
 
-
-
-// Set the title bar
-        // Apply the text to the display
+        for(int pat_idx = 0; pat_idx < curr_pat_idx; pat_idx++){
+            make_patient(patientX.at(pat_idx), patientY.at(pat_idx), patientR, height, width, screen, patientStat.at(pat_idx), nnurses.at(pat_idx));
+        }
+        
+        int time_to_die = remaining_patients.at(0).time_to_die;
+        int timer = 0;
+        vector<int> old_nurse_positions;
+        for(int curr_nurse = 0; curr_nurse < num_of_nurses; curr_nurse++){
+            old_nurse_positions.push_back(-1);
+        }
+        while(timer <= remaining_patients.size()){
+            patientStat.at(curr_pat_idx) = CURR;
+            //count the nurses.
+            int curr_nurse_idx = 0;
+            for(auto& n : nv){
+                if(old_nurse_positions.at(curr_nurse_idx) != curr_pat_idx){
+                    if(old_nurse_positions.at(curr_nurse_idx) != -1){
+                        nnurses.at(old_nurse_positions.at(curr_nurse_idx)) -= 1;
+                    }
+                    patient current_patient = n->GetPatient();
+                    old_nurse_positions.at(curr_nurse_idx) = current_patient.id;
+                    nnurses.at(current_patient.id) += 1;
+                }
+                curr_nurse_idx += 1;
+            }
+            cout << "nnurses:" << endl;
+            for (auto n : nnurses){
+                cout << n << " ";
+            }
+            cout << endl;
+            make_patient(patientX.at(curr_pat_idx), patientY.at(curr_pat_idx),\
+                         patientR, height, width, screen, patientStat.at(curr_pat_idx), nnurses.at(curr_pat_idx));
+            for(int pat_idx = curr_pat_idx + 1; pat_idx < 8; pat_idx++){
+                make_patient(patientX.at(pat_idx), patientY.at(pat_idx), patientR, height,\
+                             width, screen, patientStat.at(pat_idx), nnurses.at(pat_idx));
+            }    
+            if ((timer == time_to_die)or(timer==remaining_patients.size())){
+                cout << "PATIENT HAS DIED!" << endl;
+                patientStat.at(curr_pat_idx) = DEAD;
+                make_patient(patientX.at(curr_pat_idx), patientY.at(curr_pat_idx),\
+                             patientR, height, width, screen, patientStat.at(curr_pat_idx), nnurses.at(curr_pat_idx));
+                break;
+            }
+            else if(nnurses.at(curr_pat_idx) >= 4){
+                patientStat.at(curr_pat_idx) = ALIVE;        
+                make_patient(patientX.at(curr_pat_idx), patientY.at(curr_pat_idx),\
+                             patientR, height, width, screen, patientStat.at(curr_pat_idx), nnurses.at(curr_pat_idx));
+                break;
+            }
+            timer += 1;
+            if (SDL_BlitSurface(text, NULL, screen, NULL) != 0)
+            {
+                cerr << "SDL_BlitSurface() Failed: " << SDL_GetError() << endl;
+                break;
+            }
+            for(int wait = 0; wait < 1000000; wait++){
+                for(int wait2 = 0; wait2 < 100; wait2++){
+                    int dummy = 0;
+                }
+            }
+        }
+        curr_pat_idx += 1;        
+        remaining_patients.erase(remaining_patients.begin());
+        //SDL_UnlockSurface(screen);
         if (SDL_BlitSurface(text, NULL, screen, NULL) != 0)
         {
              cerr << "SDL_BlitSurface() Failed: " << SDL_GetError() << endl;
             break;
         }
-
-        //SDL_LockSurface(screen);
         SDL_FreeSurface(screen);
- 
         SDL_Flip(screen);
+        if(curr_pat_idx == n_pats){
+            int make_wait;
+            cin >> make_wait;
+        }    
     }
+    
     return 0;
 }

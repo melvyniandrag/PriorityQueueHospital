@@ -22,17 +22,12 @@ private:
 public:
     nurse(int id, COMPARATOR c) : id(id), comparator(c){}
     void ResetQueue(std::vector<patient> pv){
-        std::cout << "Reseting queue" << std::endl;
         while(!pq.empty()){
             pq.pop();
         }
-        std::cout << "the queue is empty now" << std::endl;
         for (auto p : pv){
-            std::cout << p.id << " ";
             pq.push(p);
         }
-        std::cout << std::endl;
-        std::cout << "The queue is full now" << std::endl;
     };
     patient GetPatient(){
         return pq.top();
